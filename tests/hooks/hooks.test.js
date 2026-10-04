@@ -114,7 +114,7 @@ async function runTests() {
     await runScript(path.join(scriptsDir, 'session-end.js'));
 
     // Check if session file was created
-    const sessionsDir = path.join(os.homedir(), '.claude', 'sessions');
+    const sessionsDir = path.join(os.homedir(), '.config', 'opencode', 'sessions');
     const today = new Date().toISOString().split('T')[0];
     const sessionFile = path.join(sessionsDir, `${today}-session.tmp`);
 
@@ -136,7 +136,7 @@ async function runTests() {
 
   if (await asyncTest('creates compaction log', async () => {
     await runScript(path.join(scriptsDir, 'pre-compact.js'));
-    const logFile = path.join(os.homedir(), '.claude', 'sessions', 'compaction-log.txt');
+    const logFile = path.join(os.homedir(), '.config', 'opencode', 'sessions', 'compaction-log.txt');
     assert.ok(fs.existsSync(logFile), 'Compaction log should exist');
   })) passed++; else failed++;
 
@@ -238,70 +238,32 @@ async function runTests() {
     cleanupTestDir(testDir);
   })) passed++; else failed++;
 
-  // hooks.json validation
-  console.log('\nhooks.json Validation:');
+  // opencode plugin validation (replaces Claude Code hooks.json)
+  console.log('\nopencode plugin Validation:');
 
-  if (test('hooks.json is valid JSON', () => {
-    const hooksPath = path.join(__dirname, '..', '..', 'hooks', 'hooks.json');
-    const content = fs.readFileSync(hooksPath, 'utf8');
-    JSON.parse(content); // Will throw if invalid
+  const pluginDir = path.join(__dirname, '..', '..', '.opencode', 'plugins');
+
+  if (test('opencode plugin exists', () => {
+    const files = fs.readdirSync(pluginDir).filter((f) => f.endsWith('.js') || f.endsWith('.ts'));
+    assert.ok(files.length > 0, 'Should have at least one plugin file');
   })) passed++; else failed++;
 
-  if (test('hooks.json has required event types', () => {
-    const hooksPath = path.join(__dirname, '..', '..', 'hooks', 'hooks.json');
-    const hooks = JSON.parse(fs.readFileSync(hooksPath, 'utf8'));
-
-    assert.ok(hooks.hooks.PreToolUse, 'Should have PreToolUse hooks');
-    assert.ok(hooks.hooks.PostToolUse, 'Should have PostToolUse hooks');
-    assert.ok(hooks.hooks.SessionStart, 'Should have SessionStart hooks');
-    assert.ok(hooks.hooks.Stop, 'Should have Stop hooks');
-    assert.ok(hooks.hooks.PreCompact, 'Should have PreCompact hooks');
-  })) passed++; else failed++;
-
-  if (test('all hook commands use node', () => {
-    const hooksPath = path.join(__dirname, '..', '..', 'hooks', 'hooks.json');
-    const hooks = JSON.parse(fs.readFileSync(hooksPath, 'utf8'));
-
-    const checkHooks = (hookArray) => {
-      for (const entry of hookArray) {
-        for (const hook of entry.hooks) {
-          if (hook.type === 'command') {
-            assert.ok(
-              hook.command.startsWith('node'),
-              `Hook command should start with 'node': ${hook.command.substring(0, 50)}...`
-            );
-          }
-        }
-      }
-    };
-
-    for (const [eventType, hookArray] of Object.entries(hooks.hooks)) {
-      checkHooks(hookArray);
+  if (test('plugin is valid JS', () => {
+    const files = fs.readdirSync(pluginDir).filter((f) => f.endsWith('.js'));
+    for (const file of files) {
+      const content = fs.readFileSync(path.join(pluginDir, file), 'utf8');
+      assert.ok(content.includes('export const'), `Should export a plugin: ${file}`);
+      assert.ok(content.includes('tool.execute.before') || content.includes('tool.execute.after') || content.includes('event:'), `Should register hooks: ${file}`);
     }
   })) passed++; else failed++;
 
-  if (test('script references use CLAUDE_PLUGIN_ROOT variable', () => {
-    const hooksPath = path.join(__dirname, '..', '..', 'hooks', 'hooks.json');
-    const hooks = JSON.parse(fs.readFileSync(hooksPath, 'utf8'));
-
-    const checkHooks = (hookArray) => {
-      for (const entry of hookArray) {
-        for (const hook of entry.hooks) {
-          if (hook.type === 'command' && hook.command.includes('scripts/hooks/')) {
-            // Check for the literal string "${CLAUDE_PLUGIN_ROOT}" in the command
-            const hasPluginRoot = hook.command.includes('${CLAUDE_PLUGIN_ROOT}');
-            assert.ok(
-              hasPluginRoot,
-              `Script paths should use CLAUDE_PLUGIN_ROOT: ${hook.command.substring(0, 80)}...`
-            );
-          }
-        }
-      }
-    };
-
-    for (const [eventType, hookArray] of Object.entries(hooks.hooks)) {
-      checkHooks(hookArray);
-    }
+  if (test('plugin handles key events', () => {
+    const files = fs.readdirSync(pluginDir).filter((f) => f.endsWith('.js'));
+    const content = fs.readFileSync(path.join(pluginDir, files[0]), 'utf8');
+    assert.ok(
+      content.includes('session.idle') || content.includes('session.created') || content.includes('session.updated'),
+      'Should handle session lifecycle events'
+    );
   })) passed++; else failed++;
 
   // Summary

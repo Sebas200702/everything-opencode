@@ -1,392 +1,151 @@
-# Everything Claude Code
+# Everything OpenCode
 
-[![Stars](https://img.shields.io/github/stars/affaan-m/everything-claude-code?style=flat)](https://github.com/affaan-m/everything-claude-code/stargazers)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Shell](https://img.shields.io/badge/-Shell-4EAA25?logo=gnu-bash&logoColor=white)
-![TypeScript](https://img.shields.io/badge/-TypeScript-3178C6?logo=typescript&logoColor=white)
-![Markdown](https://img.shields.io/badge/-Markdown-000000?logo=markdown&logoColor=white)
+**La colección completa de configs de Claude Code, adaptada y mejorada para [OpenCode](https://opencode.ai).**
 
-**The complete collection of Claude Code configs from an Anthropic hackathon winner.**
-
-Production-ready agents, skills, hooks, commands, rules, and MCP configurations evolved over 10+ months of intensive daily use building real products.
+Fork de [WorldFlowAI/everything-claude-code](https://github.com/WorldFlowAI/everything-claude-code) convertido a formato nativo de **opencode V1** — agents, commands, skills, plugin de hooks y servidores MCP listos para usar en entornos de desarrollo versátiles.
 
 ---
 
-## The Guides
+## Qué es esto
 
-This repo is the raw code only. The guides explain everything.
+El repo original (del ganador de un hackathon de Anthropic) contiene configs probadas en producción durante 10+ meses. Esta adaptación:
 
-<table>
-<tr>
-<td width="50%">
-<a href="https://x.com/affaanmustafa/status/2012378465664745795">
-<img src="https://github.com/user-attachments/assets/1a471488-59cc-425b-8345-5245c7efbcef" alt="The Shorthand Guide to Everything Claude Code" />
-</a>
-</td>
-<td width="50%">
-<a href="https://x.com/affaanmustafa/status/2014040193557471352">
-<img src="https://github.com/user-attachments/assets/c9ca43bc-b149-427f-b551-af6840c368f0" alt="The Longform Guide to Everything Claude Code" />
-</a>
-</td>
-</tr>
-<tr>
-<td align="center"><b>Shorthand Guide</b><br/>Setup, foundations, philosophy. <b>Read this first.</b></td>
-<td align="center"><b>Longform Guide</b><br/>Token optimization, memory persistence, evals, parallelization.</td>
-</tr>
-</table>
-
-| Topic | What You'll Learn |
-|-------|-------------------|
-| Token Optimization | Model selection, system prompt slimming, background processes |
-| Memory Persistence | Hooks that save/load context across sessions automatically |
-| Continuous Learning | Auto-extract patterns from sessions into reusable skills |
-| Verification Loops | Checkpoint vs continuous evals, grader types, pass@k metrics |
-| Parallelization | Git worktrees, cascade method, when to scale instances |
-| Subagent Orchestration | The context problem, iterative retrieval pattern |
+| Cambio | Detalle |
+|---|---|
+| **Agents** | `agents/*.md` (formato Claude) → `.opencode/agents/*.md` con `mode: subagent` + `permission`, listos para la tool `task` / `@mencion` |
+| **Commands** | `commands/*.md` → `.opencode/commands/*.md`. Los que invocaban agentes ahora declaran `agent:` + `subtask: true` |
+| **Skills** | `skills/` → `.opencode/skills/<name>/SKILL.md` (detección nativa del `skill` tool) — **+15 skills de [Superpowers](https://github.com/obra/superpowers) + 16 nuevas** |
+| **Hooks** | `hooks/hooks.json` (Claude) → `.opencode/plugins/everything.js` (plugin con `tool.execute.before/after`, `event`, `experimental.session.compacting`) |
+| **Rules** | `rules/*.md` → `AGENTS.md` consolidado en la raíz |
+| **MCP** | `mcp-configs/mcp-servers.json` → `opencode.json` (sección `mcp`, formato opencode) |
+| **Original** | El formato Claude Code original vive intacto en `docs/claude-code/` como histórico |
 
 ---
 
-## Cross-Platform Support
+## Instalación
 
-This plugin now fully supports **Windows, macOS, and Linux**. All hooks and scripts have been rewritten in Node.js for maximum compatibility.
-
-### Package Manager Detection
-
-The plugin automatically detects your preferred package manager (npm, pnpm, yarn, or bun) with the following priority:
-
-1. **Environment variable**: `CLAUDE_PACKAGE_MANAGER`
-2. **Project config**: `.claude/package-manager.json`
-3. **package.json**: `packageManager` field
-4. **Lock file**: Detection from package-lock.json, yarn.lock, pnpm-lock.yaml, or bun.lockb
-5. **Global config**: `~/.claude/package-manager.json`
-6. **Fallback**: First available package manager
-
-To set your preferred package manager:
+### Opción 1: Clonar y usar como proyecto de config
 
 ```bash
-# Via environment variable
-export CLAUDE_PACKAGE_MANAGER=pnpm
-
-# Via global config
-node scripts/setup-package-manager.js --global pnpm
-
-# Via project config
-node scripts/setup-package-manager.js --project bun
-
-# Detect current setting
-node scripts/setup-package-manager.js --detect
+git clone https://github.com/Sebas200702/everything-claude-code.git
+cd everything-claude-code
+code .   # o abre la carpeta en tu editor; opencode detecta .opencode/ automáticamente
 ```
 
-Or use the `/setup-pm` command in Claude Code.
-
----
-
-## What's Inside
-
-This repo is a **Claude Code plugin** - install it directly or copy components manually.
-
-```
-everything-claude-code/
-|-- .claude-plugin/   # Plugin and marketplace manifests
-|   |-- plugin.json         # Plugin metadata and component paths
-|   |-- marketplace.json    # Marketplace catalog for /plugin marketplace add
-|
-|-- agents/           # Specialized subagents for delegation
-|   |-- planner.md           # Feature implementation planning
-|   |-- architect.md         # System design decisions
-|   |-- tdd-guide.md         # Test-driven development
-|   |-- code-reviewer.md     # Quality and security review
-|   |-- security-reviewer.md # Vulnerability analysis
-|   |-- build-error-resolver.md
-|   |-- e2e-runner.md        # Playwright E2E testing
-|   |-- refactor-cleaner.md  # Dead code cleanup
-|   |-- doc-updater.md       # Documentation sync
-|
-|-- skills/           # Workflow definitions and domain knowledge
-|   |-- coding-standards/           # Language best practices
-|   |-- backend-patterns/           # API, database, caching patterns
-|   |-- frontend-patterns/          # React, Next.js patterns
-|   |-- continuous-learning/        # Auto-extract patterns from sessions (Longform Guide)
-|   |-- strategic-compact/          # Manual compaction suggestions (Longform Guide)
-|   |-- tdd-workflow/               # TDD methodology
-|   |-- security-review/            # Security checklist
-|   |-- eval-harness/               # Verification loop evaluation (Longform Guide)
-|   |-- verification-loop/          # Continuous verification (Longform Guide)
-|
-|-- commands/         # Slash commands for quick execution
-|   |-- tdd.md              # /tdd - Test-driven development
-|   |-- plan.md             # /plan - Implementation planning
-|   |-- e2e.md              # /e2e - E2E test generation
-|   |-- code-review.md      # /code-review - Quality review
-|   |-- build-fix.md        # /build-fix - Fix build errors
-|   |-- refactor-clean.md   # /refactor-clean - Dead code removal
-|   |-- learn.md            # /learn - Extract patterns mid-session (Longform Guide)
-|   |-- checkpoint.md       # /checkpoint - Save verification state (Longform Guide)
-|   |-- verify.md           # /verify - Run verification loop (Longform Guide)
-|   |-- setup-pm.md         # /setup-pm - Configure package manager (NEW)
-|
-|-- rules/            # Always-follow guidelines (copy to ~/.claude/rules/)
-|   |-- security.md         # Mandatory security checks
-|   |-- coding-style.md     # Immutability, file organization
-|   |-- testing.md          # TDD, 80% coverage requirement
-|   |-- git-workflow.md     # Commit format, PR process
-|   |-- agents.md           # When to delegate to subagents
-|   |-- performance.md      # Model selection, context management
-|
-|-- hooks/            # Trigger-based automations
-|   |-- hooks.json                # All hooks config (PreToolUse, PostToolUse, Stop, etc.)
-|   |-- memory-persistence/       # Session lifecycle hooks (Longform Guide)
-|   |-- strategic-compact/        # Compaction suggestions (Longform Guide)
-|
-|-- scripts/          # Cross-platform Node.js scripts (NEW)
-|   |-- lib/                     # Shared utilities
-|   |   |-- utils.js             # Cross-platform file/path/system utilities
-|   |   |-- package-manager.js   # Package manager detection and selection
-|   |-- hooks/                   # Hook implementations
-|   |   |-- session-start.js     # Load context on session start
-|   |   |-- session-end.js       # Save state on session end
-|   |   |-- pre-compact.js       # Pre-compaction state saving
-|   |   |-- suggest-compact.js   # Strategic compaction suggestions
-|   |   |-- evaluate-session.js  # Extract patterns from sessions
-|   |-- setup-package-manager.js # Interactive PM setup
-|
-|-- tests/            # Test suite (NEW)
-|   |-- lib/                     # Library tests
-|   |-- hooks/                   # Hook tests
-|   |-- run-all.js               # Run all tests
-|
-|-- contexts/         # Dynamic system prompt injection contexts (Longform Guide)
-|   |-- dev.md              # Development mode context
-|   |-- review.md           # Code review mode context
-|   |-- research.md         # Research/exploration mode context
-|
-|-- examples/         # Example configurations and sessions
-|   |-- CLAUDE.md           # Example project-level config
-|   |-- user-CLAUDE.md      # Example user-level config
-|
-|-- mcp-configs/      # MCP server configurations
-|   |-- mcp-servers.json    # GitHub, Supabase, Vercel, Railway, etc.
-|
-|-- marketplace.json  # Self-hosted marketplace config (for /plugin marketplace add)
-```
-
----
-
-## Installation
-
-### Option 1: Install as Plugin (Recommended)
-
-The easiest way to use this repo - install as a Claude Code plugin:
+### Opción 2: Copiar a tu proyecto
 
 ```bash
-# Add this repo as a marketplace
-/plugin marketplace add affaan-m/everything-claude-code
+# Agents, commands y skills
+cp -r .opencode/agents/*    /tu/proyecto/.opencode/agents/
+cp -r .opencode/commands/*  /tu/proyecto/.opencode/commands/
+cp -r .opencode/skills/*    /tu/proyecto/.opencode/skills/
 
-# Install the plugin
-/plugin install everything-claude-code@everything-claude-code
+# Plugin de hooks
+cp -r .opencode/plugins/    /tu/proyecto/.opencode/plugins/
+cp -r scripts/              /tu/proyecto/scripts/   # solo si quieres los hooks que llaman scripts
+
+# Rules y MCP
+cp AGENTS.md    /tu/proyecto/
+# fusiona la sección "mcp" de opencode.json con tu opencode.json
 ```
 
-Or add directly to your `~/.claude/settings.json`:
+> **Importante**: los hooks invocan scripts de `scripts/hooks/*.js` desde la raíz del repo. Si copias el plugin, copia también `scripts/`.
 
-```json
-{
-  "extraKnownMarketplaces": {
-    "everything-claude-code": {
-      "source": {
-        "source": "github",
-        "repo": "affaan-m/everything-claude-code"
-      }
-    }
-  },
-  "enabledPlugins": {
-    "everything-claude-code@everything-claude-code": true
-  }
-}
-```
-
-This gives you instant access to all commands, agents, skills, and hooks.
-
----
-
-### Option 2: Manual Installation
-
-If you prefer manual control over what's installed:
+### Opción 3: Solo skills (lo más portable)
 
 ```bash
-# Clone the repo
-git clone https://github.com/affaan-m/everything-claude-code.git
-
-# Copy agents to your Claude config
-cp everything-claude-code/agents/*.md ~/.claude/agents/
-
-# Copy rules
-cp everything-claude-code/rules/*.md ~/.claude/rules/
-
-# Copy commands
-cp everything-claude-code/commands/*.md ~/.claude/commands/
-
-# Copy skills
-cp -r everything-claude-code/skills/* ~/.claude/skills/
-```
-
-#### Add hooks to settings.json
-
-Copy the hooks from `hooks/hooks.json` to your `~/.claude/settings.json`.
-
-#### Configure MCPs
-
-Copy desired MCP servers from `mcp-configs/mcp-servers.json` to your `~/.claude.json`.
-
-**Important:** Replace `YOUR_*_HERE` placeholders with your actual API keys.
-
----
-
-## Key Concepts
-
-### Agents
-
-Subagents handle delegated tasks with limited scope. Example:
-
-```markdown
----
-name: code-reviewer
-description: Reviews code for quality, security, and maintainability
-tools: Read, Grep, Glob, Bash
-model: opus
----
-
-You are a senior code reviewer...
-```
-
-### Skills
-
-Skills are workflow definitions invoked by commands or agents:
-
-```markdown
-# TDD Workflow
-
-1. Define interfaces first
-2. Write failing tests (RED)
-3. Implement minimal code (GREEN)
-4. Refactor (IMPROVE)
-5. Verify 80%+ coverage
-```
-
-### Hooks
-
-Hooks fire on tool events. Example - warn about console.log:
-
-```json
-{
-  "matcher": "tool == \"Edit\" && tool_input.file_path matches \"\\\\.(ts|tsx|js|jsx)$\"",
-  "hooks": [{
-    "type": "command",
-    "command": "#!/bin/bash\ngrep -n 'console\\.log' \"$file_path\" && echo '[Hook] Remove console.log' >&2"
-  }]
-}
-```
-
-### Rules
-
-Rules are always-follow guidelines. Keep them modular:
-
-```
-~/.claude/rules/
-  security.md      # No hardcoded secrets
-  coding-style.md  # Immutability, file limits
-  testing.md       # TDD, coverage requirements
+cp -r .opencode/skills/*  ~/.config/opencode/skills/
 ```
 
 ---
 
-## Running Tests
+## Qué hay dentro
 
-The plugin includes a comprehensive test suite:
+```
+.
+├── .opencode/
+│   ├── agents/            # 9 subagentes especializados (mode: subagent)
+│   ├── commands/          # 16 commands slash (/tdd, /plan, /code-review, ...)
+│   ├── skills/            # 42 skills: 11 originales + 15 superpowers + 16 nuevas
+│   └── plugins/           # everything.js — hooks convertidos a plugin opencode
+├── opencode.json          # config opencode: MCPs, instructions, $schema
+├── AGENTS.md              # rules consolidadas (estilo, git, orquestación, hooks)
+├── scripts/               # utilidades cross-platform Node.js (hooks, package-manager)
+├── tests/                 # suite de tests (node tests/run-all.js)
+└── docs/claude-code/      # histórico íntegro del formato Claude Code original
+```
+
+## Agents
+
+Subagentes en `.opencode/agents/` — invocables con la tool `task` o `@<nombre>`:
+
+| Agente | Propósito | Permisos |
+|---|---|---|
+| `planner` | Planificación de implementación | read/grep/glob |
+| `architect` | Diseño de sistemas | read-only |
+| `tdd-guide` | TDD, tests primero, 80%+ cobertura | read/edit/bash/grep |
+| `code-reviewer` | Revisión de calidad y seguridad | read-only (+bash para git diff) |
+| `security-reviewer` | Vulnerabilidades, OWASP, secretos | read/edit/bash/grep/glob |
+| `build-error-resolver` | Arreglar build/TS rápido | read/edit/bash/grep/glob |
+| `e2e-runner` | E2E con Playwright | read/edit/bash/grep/glob |
+| `refactor-cleaner` | Limpieza de código muerto | read/edit/bash/grep/glob |
+| `doc-updater` | Documentación y codemaps | read/edit/bash/grep/glob |
+
+## Commands
+
+`/tdd` · `/plan` · `/e2e` · `/code-review` · `/build-fix` · `/refactor-clean` · `/update-docs` · `/update-codemaps` · `/verify` · `/checkpoint` · `/eval` · `/learn` · `/orchestrate` · `/test-coverage` · `/setup-pm` · `/seed-skills` *(los de agente usan `subtask: true`)*
+
+## Skills (42)
+
+**Originales (11):** `backend-patterns` · `frontend-patterns` · `coding-standards` · `tdd-workflow` · `security-review` · `verification-loop` · `eval-harness` · `strategic-compact` · `continuous-learning` · `project-guidelines-example` · `clickhouse-io`
+
+**Superpowers (15):** `brainstorming` · `writing-plans` · `executing-plans` · `subagent-driven-development` · `test-driven-development` · `systematic-debugging` · `verification-before-completion` · `requesting-code-review` · `receiving-code-review` · `using-git-worktrees` · `finishing-a-development-branch` · `dispatching-parallel-agents` · `writing-skills` · `using-superpowers` · `diagnosing-superpowers`
+
+**Nuevas (16) — para entornos de desarrollo versátiles:**
+
+| Categoría | Skills |
+|---|---|
+| DevOps / Infra | `docker-containers` · `kubernetes` · `ci-cd-pipelines` · `infrastructure-as-code` · `production-debugging` |
+| Databases | `sql-optimization` · `database-migrations` |
+| Lenguajes | `python-best-practices` · `go-development` · `rust-development` |
+| Frontend / Mobile | `web-performance` · `accessibility-audit` · `react-native-development` |
+| API / Integraciones | `api-rest-design` · `oauth-authentication` · `webhook-integrations` |
+
+## Hooks → Plugin
+
+Los hooks de Claude Code (`PreToolUse`, `PostToolUse`, `SessionStart`, `Stop`, `PreCompact`) se convirtieron en `.opencode/plugins/everything.js`:
+
+- **`tool.execute.before`** — bloquea dev servers fuera de tmux, recuerda tmux en comandos largos, revisa antes de `git push`, bloquea `.md`/`.txt` sueltos.
+- **`tool.execute.after`** — formatea con Prettier, avisa de `console.log`, loguea URL de PR tras `gh pr create`.
+- **`event`** — carga contexto previo y detecta package manager (`session-start.js`), persiste sesión y evalúa patrones (`session-end.js` / `evaluate-session.js`).
+- **`experimental.session.compacting`** — guarda estado pre-compactación e inyecta contexto.
+
+## MCP Servers
+
+En `opencode.json` (`mcp`). Activa solo los que uses (`"enabled": true`) y reemplaza los placeholders `YOUR_*_HERE`. **Regla: menos de 10 MCP habilitados** para no comer la ventana de contexto.
+
+Disponibles: `context7` · `github` · `firecrawl` · `supabase` · `memory` · `sequential-thinking` · `vercel` · `railway` · `cloudflare-docs` · `cloudflare-workers-builds` · `cloudflare-workers-bindings` · `cloudflare-observability` · `clickhouse` · `magic`
+
+## 📓 Histórico Claude Code
+
+El formato original (`.claude-plugin/`, `hooks.json`, agents/rules en formato Claude, MCP clásico) se conserva íntegro en **`docs/claude-code/`** como referencia. Para usarlo con Claude Code, sigue el [README original del upstream](https://github.com/WorldFlowAI/everything-claude-code).
+
+## Tests
 
 ```bash
-# Run all tests
 node tests/run-all.js
-
-# Run individual test files
-node tests/lib/utils.test.js
-node tests/lib/package-manager.test.js
-node tests/hooks/hooks.test.js
 ```
 
----
+Cubre utilidades cross-platform, detección de package manager y el plugin de hooks.
+
+## Superpowers
+
+Las 15 skills de [obra/superpowers](https://github.com/obra/superpowers) están integradas y funcionan con el `skill` tool nativo de opencode. El flujo completo (brainstorming → planes → subagent-driven development → TDD → code review) está disponible invocando las skills, con la orquestación documentada en `AGENTS.md`.
 
 ## Contributing
 
-**Contributions are welcome and encouraged.**
-
-This repo is meant to be a community resource. If you have:
-- Useful agents or skills
-- Clever hooks
-- Better MCP configurations
-- Improved rules
-
-Please contribute! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### Ideas for Contributions
-
-- Language-specific skills (Python, Go, Rust patterns)
-- Framework-specific configs (Django, Rails, Laravel)
-- DevOps agents (Kubernetes, Terraform, AWS)
-- Testing strategies (different frameworks)
-- Domain-specific knowledge (ML, data engineering, mobile)
-
----
-
-## Background
-
-I've been using Claude Code since the experimental rollout. Won the Anthropic x Forum Ventures hackathon in Sep 2025 building [zenith.chat](https://zenith.chat) with [@DRodriguezFX](https://x.com/DRodriguezFX) - entirely using Claude Code.
-
-These configs are battle-tested across multiple production applications.
-
----
-
-## Important Notes
-
-### Context Window Management
-
-**Critical:** Don't enable all MCPs at once. Your 200k context window can shrink to 70k with too many tools enabled.
-
-Rule of thumb:
-- Have 20-30 MCPs configured
-- Keep under 10 enabled per project
-- Under 80 tools active
-
-Use `disabledMcpServers` in project config to disable unused ones.
-
-### Customization
-
-These configs work for my workflow. You should:
-1. Start with what resonates
-2. Modify for your stack
-3. Remove what you don't use
-4. Add your own patterns
-
----
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=affaan-m/everything-claude-code&type=Date)](https://star-history.com/#affaan-m/everything-claude-code&Date)
-
----
-
-## Links
-
-- **Shorthand Guide (Start Here):** [The Shorthand Guide to Everything Claude Code](https://x.com/affaanmustafa/status/2012378465664745795)
-- **Longform Guide (Advanced):** [The Longform Guide to Everything Claude Code](https://x.com/affaanmustafa/status/2014040193557471352)
-- **Follow:** [@affaanmustafa](https://x.com/affaanmustafa)
-- **zenith.chat:** [zenith.chat](https://zenith.chat)
-
----
+¿Quieres aportar? Ver `CONTRIBUTING.md`. Se aceptan skills nuevas, mejoras de plugin y configs de MCP.
 
 ## License
 
-MIT - Use freely, modify as needed, contribute back if you can.
-
----
-
-**Star this repo if it helps. Read both guides. Build something great.**
+MIT — úsalo, modifícalo, contribuye de vuelta.

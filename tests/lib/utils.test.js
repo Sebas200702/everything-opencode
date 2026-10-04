@@ -62,7 +62,10 @@ function runTests() {
     const claudeDir = utils.getClaudeDir();
     const homeDir = utils.getHomeDir();
     assert.ok(claudeDir.startsWith(homeDir), 'Claude dir should be under home');
-    assert.ok(claudeDir.includes('.claude'), 'Should contain .claude');
+    assert.ok(
+      claudeDir.includes('.config') || claudeDir.includes('.claude'),
+      'Should contain .config/opencode or .claude'
+    );
   })) passed++; else failed++;
 
   if (test('getSessionsDir returns path under Claude dir', () => {

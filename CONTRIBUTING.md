@@ -1,191 +1,176 @@
-# Contributing to Everything Claude Code
+# Contributing to Everything OpenCode
 
-Thanks for wanting to contribute. This repo is meant to be a community resource for Claude Code users.
+Gracias por querer contribuir. El repo es un recurso comunitario para usuarios de **OpenCode** (adaptado de Everything Claude Code).
 
-## What We're Looking For
+## Qué buscamos
 
 ### Agents
-
-New agents that handle specific tasks well:
-- Language-specific reviewers (Python, Go, Rust)
-- Framework experts (Django, Rails, Laravel, Spring)
-- DevOps specialists (Kubernetes, Terraform, CI/CD)
-- Domain experts (ML pipelines, data engineering, mobile)
+Nuevos subagentes en `.opencode/agents/`:
+- Revisores por lenguaje (Python, Go, Rust)
+- Expertos de frameworks (Django, Rails, Laravel, Spring)
+- Especialistas DevOps (Kubernetes, Terraform, CI/CD)
+- Expertos de dominio (ML pipelines, data engineering, mobile)
 
 ### Skills
-
-Workflow definitions and domain knowledge:
-- Language best practices
-- Framework patterns
-- Testing strategies
-- Architecture guides
-- Domain-specific knowledge
+Definiciones de workflow y conocimiento de dominio en `.opencode/skills/<name>/SKILL.md`:
+- Buenas prácticas por lenguaje
+- Patrones de frameworks
+- Estrategias de testing
+- Guías de arquitectura
+- Conocimiento de dominio específico
 
 ### Commands
+Commands slash en `.opencode/commands/`:
+- Deployment, testing, documentación, generación de código
 
-Slash commands that invoke useful workflows:
-- Deployment commands
-- Testing commands
-- Documentation commands
-- Code generation commands
+### Plugin / Hooks
+Automatizaciones útiles en `.opencode/plugins/`:
+- Hooks de linting/formateo
+- Chequeos de seguridad
+- Hook de validación
+- Hooks de notificación
 
-### Hooks
+### Reglas
+Pautas siempre-presentes (editar `AGENTS.md`):
+- Seguridad, estilo de código, testing, convenciones de naming
 
-Useful automations:
-- Linting/formatting hooks
-- Security checks
-- Validation hooks
-- Notification hooks
-
-### Rules
-
-Always-follow guidelines:
-- Security rules
-- Code style rules
-- Testing requirements
-- Naming conventions
-
-### MCP Configurations
-
-New or improved MCP server configs:
-- Database integrations
-- Cloud provider MCPs
-- Monitoring tools
-- Communication tools
+### MCP
+Configuraciones MCP nuevas o mejoradas en `opencode.json` (`mcp`):
+- Integraciones de base de datos, cloud providers, monitoreo, comunicación
 
 ---
 
-## How to Contribute
+## Cómo contribuir
 
-### 1. Fork the repo
+### 1. Fork y clone
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/everything-claude-code.git
 cd everything-claude-code
 ```
 
-### 2. Create a branch
+### 2. Crea una rama
 
 ```bash
 git checkout -b add-python-reviewer
 ```
 
-### 3. Add your contribution
+### 3. Añade tu contribución en el directorio correcto
 
-Place files in the appropriate directory:
-- `agents/` for new agents
-- `skills/` for skills (can be single .md or directory)
-- `commands/` for slash commands
-- `rules/` for rule files
-- `hooks/` for hook configurations
-- `mcp-configs/` for MCP server configs
+- `.opencode/agents/` — subagentes
+- `.opencode/skills/<name>/SKILL.md` — skills (carpeta por skill, nombre = `name` del frontmatter)
+- `.opencode/commands/` — commands slash
+- `AGENTS.md` — reglas
+- `.opencode/plugins/` — hooks/plugin
+- `opencode.json` (`mcp`) — servidores MCP
 
-### 4. Follow the format
+### 4. Sigue el formato
 
-**Agents** should have frontmatter:
+**Agent** (el nombre del archivo define el id; `name` NO va en el frontmatter):
 
 ```markdown
 ---
-name: agent-name
-description: What it does
-tools: Read, Grep, Glob, Bash
-model: sonnet
+description: Qué hace y cuándo usarlo
+mode: subagent
+permission:
+  read: allow
+  edit: deny
+  bash: deny
 ---
 
-Instructions here...
+Instrucciones aquí...
 ```
 
-**Skills** should be clear and actionable:
+**Skill** (frontmatter obligatorio para que la detecte opencode):
 
 ```markdown
+---
+name: python-reviewer
+description: Cuándo usar esta skill
+---
+
 # Skill Name
 
 ## When to Use
 
 ...
 
-## How It Works
+## Workflow
 
 ...
 
-## Examples
+## Checklist
+
+- [ ] ...
+
+## Common Pitfalls / Anti-patterns
 
 ...
 ```
 
-**Commands** should explain what they do:
+Reglas de `name`: minúsculas con guiones (`^[a-z0-9]+(-[a-z0-9]+)*$`), debe coincidir con la carpeta.
+
+**Command**:
 
 ```markdown
 ---
-description: Brief description of command
+description: Descripción breve
+agent: python-reviewer   # opcional: invoca subagente
+subtask: true            # opcional: fuerza invocación de subagente
 ---
 
-# Command Name
-
-Detailed instructions...
+Instrucciones detalladas...
 ```
 
-**Hooks** should include descriptions:
+### 5. Testea tu contribución
 
-```json
-{
-  "matcher": "...",
-  "hooks": [...],
-  "description": "What this hook does"
-}
+```bash
+node tests/run-all.js
 ```
 
-### 5. Test your contribution
+Si tocas el plugin de hooks, verifica que `.opencode/plugins/everything.js` siga cargando:
+`node --input-type=module -e "import('./.opencode/plugins/everything.js')"`.
 
-Make sure your config works with Claude Code before submitting.
-
-### 6. Submit a PR
+### 6. Envía un PR
 
 ```bash
 git add .
-git commit -m "Add Python code reviewer agent"
+git commit -m "feat: add Python code reviewer agent"
 git push origin add-python-reviewer
 ```
 
-Then open a PR with:
-- What you added
-- Why it's useful
-- How you tested it
-
 ---
 
-## Guidelines
+## Pautas
 
 ### Do
-
-- Keep configs focused and modular
-- Include clear descriptions
-- Test before submitting
-- Follow existing patterns
-- Document any dependencies
+- Configs enfocados y modulares
+- Descripciones claras
+- Testear antes de enviar
+- Seguir los patrones existentes
+- Documentar dependencias
 
 ### Don't
-
-- Include sensitive data (API keys, tokens, paths)
-- Add overly complex or niche configs
-- Submit untested configs
-- Create duplicate functionality
-- Add configs that require specific paid services without alternatives
-
----
-
-## File Naming
-
-- Use lowercase with hyphens: `python-reviewer.md`
-- Be descriptive: `tdd-workflow.md` not `workflow.md`
-- Match the agent/skill name to the filename
+- Datos sensibles (API keys, tokens, paths)
+- Configs demasiado complejas o de nicho
+- Configs sin testear
+- Duplicar funcionalidad existente
+- Configs que dependan de servicios pagos sin alternativa
 
 ---
 
-## Questions?
+## Naming
 
-Open an issue or reach out on X: [@affaanmustafa](https://x.com/affaanmustafa)
+- Minúsculas con guiones: `python-reviewer.md`
+- Descriptivo: `tdd-workflow.md`, no `workflow.md`
+- El nombre de la skill/agente coincide con el nombre de archivo/carpeta
 
 ---
 
-Thanks for contributing. Let's build a great resource together.
+## Dudas
+
+Abre un issue en GitHub o pregunta en el repo original en X: [@affaanmustafa](https://x.com/affaanmustafa)
+
+---
+
+Gracias por contribuir. Construyamos un gran recurso.

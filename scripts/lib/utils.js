@@ -22,9 +22,30 @@ function getHomeDir() {
 
 /**
  * Get the Claude config directory
+ * Devuelve el directorio de configuración global.
+ * - Prioridad: OPENCODE_CONFIG_DIR env, luego ~/.config/opencode (estándar opencode).
+ * - Fallback: ~/.claude (compatibilidad con Claude Code).
  */
 function getClaudeDir() {
+  if (process.env.OPENCODE_CONFIG_DIR) return path.resolve(process.env.OPENCODE_CONFIG_DIR);
+  const opencodeDir = path.join(getHomeDir(), '.config', 'opencode');
+  if (fs.existsSync(opencodeDir)) return opencodeDir;
   return path.join(getHomeDir(), '.claude');
+}
+
+/**
+ * Get the opencode config directory (alias moderno de getClaudeDir)
+ */
+function getOpenCodeDir() {
+  return getClaudeDir();
+}
+
+/**
+ * Directorio .opencode/ del proyecto (config local opencode), si existe.
+ */
+function getProjectOpenCodeDir(projectDir = process.cwd()) {
+  const opencodeDir = path.join(projectDir, '.opencode');
+  return fs.existsSync(opencodeDir) ? opencodeDir : null;
 }
 
 /**
@@ -336,6 +357,8 @@ module.exports = {
   // Directories
   getHomeDir,
   getClaudeDir,
+  getOpenCodeDir,
+  getProjectOpenCodeDir,
   getSessionsDir,
   getLearnedSkillsDir,
   getTempDir,

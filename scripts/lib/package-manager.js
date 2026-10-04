@@ -7,7 +7,17 @@
 
 const fs = require('fs');
 const path = require('path');
-const { commandExists, getClaudeDir, readFile, writeFile, log, runCommand } = require('./utils');
+const { commandExists, getClaudeDir, getProjectOpenCodeDir, readFile, writeFile, log, runCommand } = require('./utils');
+
+// Helper: rutas de config de package manager (proyecto y global)
+function resolvedProjectConfigPath(projectDir) {
+  // .opencode/package-manager.json (opencode nativo) o .claude/package-manager.json (legacy)
+  const candidates = [
+    path.join(projectDir, '.opencode', 'package-manager.json'),
+    path.join(projectDir, '.claude', 'package-manager.json')
+  ];
+  return candidates.find((candidate) => fs.existsSync(candidate)) || candidates[0];
+}
 
 // Package manager definitions
 const PACKAGE_MANAGERS = {
@@ -144,11 +154,11 @@ function getAvailablePackageManagers() {
  * Get the package manager to use for current project
  *
  * Detection priority:
- * 1. Environment variable CLAUDE_PACKAGE_MANAGER
- * 2. Project-specific config (in .claude/package-manager.json)
+ * 1. Environment variable OPENCODE_PACKAGE_MANAGER (o CLAUDE_PACKAGE_MANAGER legacy)
+ * 2. Project-specific config (in .opencode/package-manager.json)
  * 3. package.json packageManager field
  * 4. Lock file detection
- * 5. Global user preference (in ~/.claude/package-manager.json)
+ * 5. Global user preference (in ~/.config/opencode/package-manager.json)
  * 6. First available package manager (by priority)
  *
  * @param {object} options - { projectDir, fallbackOrder }
@@ -158,7 +168,7 @@ function getPackageManager(options = {}) {
   const { projectDir = process.cwd(), fallbackOrder = DETECTION_PRIORITY } = options;
 
   // 1. Check environment variable
-  const envPm = process.env.CLAUDE_PACKAGE_MANAGER;
+  const envPm = process.env.OPENCODE_PACKAGE_MANAGER || process.env.CLAUDE_PACKAGE_MANAGER;
   if (envPm && PACKAGE_MANAGERS[envPm]) {
     return {
       name: envPm,
@@ -167,8 +177,8 @@ function getPackageManager(options = {}) {
     };
   }
 
-  // 2. Check project-specific config
-  const projectConfigPath = path.join(projectDir, '.claude', 'package-manager.json');
+  // 2. Check project-specific config (.opencode/ con fallback a .claude/)
+  const projectConfigPath = resolvedProjectConfigPath(projectDir);
   const projectConfig = readFile(projectConfigPath);
   if (projectConfig) {
     try {
@@ -259,9 +269,8 @@ function setProjectPackageManager(pmName, projectDir = process.cwd()) {
     throw new Error(`Unknown package manager: ${pmName}`);
   }
 
-  const configDir = path.join(projectDir, '.claude');
-  const configPath = path.join(configDir, 'package-manager.json');
-
+  const configPath = resolvedProjectConfigPath(projectDir);
+  const configDir = path.dirname(configPath);
   const config = {
     packageManager: pmName,
     setAt: new Date().toISOString()
@@ -319,8 +328,8 @@ function getSelectionPrompt() {
   }
 
   message += '\nTo set your preferred package manager:\n';
-  message += '  - Global: Set CLAUDE_PACKAGE_MANAGER environment variable\n';
-  message += '  - Or add to ~/.claude/package-manager.json: {"packageManager": "pnpm"}\n';
+  message += '  - Global: Set OPENCODE_PACKAGE_MANAGER environment variable\n';
+  message += '  - Or add to ~/.config/opencode/package-manager.json: {"packageManager": "pnpm"}\n';
   message += '  - Or add to package.json: {"packageManager": "pnpm@8"}\n';
 
   return message;
